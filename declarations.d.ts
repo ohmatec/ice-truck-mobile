@@ -1,12 +1,3 @@
-// Temporary module declarations to satisfy TypeScript in projects without @types packages
-declare module 'react';
-declare module 'react/jsx-runtime';
+// This file intentionally left blank to avoid accidentally shadowing real
+// type declarations from @types/react / @types/react-native in local dev.
 
-// Allow any JSX intrinsic elements so React Native components like <View/> are accepted
-declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			[elemName: string]: any;
-		}
-	}
-}

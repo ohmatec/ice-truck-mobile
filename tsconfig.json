@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "types": ["react", "react-native"]
+    "types": ["react", "react-native"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": false
   },
   "extends": "expo/tsconfig.base"
 }
