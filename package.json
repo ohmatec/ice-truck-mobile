@@ -1,17 +1,19 @@
 {
   "name": "mytruck-mobile",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start -c",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo start run:android",
+    "ios": "expo start run:ios",
+    "web": "expo start run:web"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-navigation/native": "^7.1.18",
     "expo": "~54.0.13",
     "expo-linear-gradient": "~15.0.7",
+    "expo-linking": "~8.0.8",
     "expo-router": "^6.0.12",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",

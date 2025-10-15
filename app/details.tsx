@@ -6,11 +6,22 @@ export default function Details() {
     plate: "Hino Telolet",
     space: 60,
     type: "10.00–20 16PR",
-    weight: 7282, speed: 108, power: 215, size: "The Six"
+    weight: 7282,
+    speed: 108,
+    power: 215,
+    size: "The Six",
   };
   const timeline = [
-    { when: "Oct 21, 23:05", title: "Order Received", place: "DKI, Jakarta, Indonesia" },
-    { when: "Oct 21, 17:07", title: "Departure", place: "Tanjung Priok, Indonesia" },
+    {
+      when: "Oct 21, 23:05",
+      title: "Order Received",
+      place: "DKI, Jakarta, Indonesia",
+    },
+    {
+      when: "Oct 21, 17:07",
+      title: "Departure",
+      place: "Tanjung Priok, Indonesia",
+    },
   ];
 
   return (
@@ -63,16 +74,37 @@ function Item({ label, value }: { label: string; value: string }) {
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12 },
   card: {
-    backgroundColor: "#fff", borderRadius: 20, padding: 16,
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  badge: { alignSelf: "flex-start", backgroundColor: "#e7f1ff", color: "#356eb3", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginBottom: 8, fontWeight: "700" },
+  badge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#e7f1ff",
+    color: "#356eb3",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 8,
+    fontWeight: "700",
+  },
   h1: { fontSize: 18, fontWeight: "800", color: "#1d3557", marginBottom: 10 },
   row: { flexDirection: "row", gap: 12 },
   item: { flex: 1, backgroundColor: "#f7f9fc", borderRadius: 12, padding: 12 },
   label: { fontSize: 12, color: "#6c7a89" },
   value: { fontSize: 16, fontWeight: "700", color: "#1d3557", marginTop: 4 },
-  timeline: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#eef2f7" },
+  timeline: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef2f7",
+  },
   dot: { width: 10, height: 10, borderRadius: 6, backgroundColor: "#cfd8e3" },
   dotBlue: { backgroundColor: "#2c5b86" },
   time: { fontSize: 12, color: "#7c8b9a" },

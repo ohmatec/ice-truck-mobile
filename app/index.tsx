@@ -19,17 +19,17 @@ const SLIDES: Slide[] = [
   {
     key: "s1",
     title: "Discover Nearest Location",
-    image: require("./assets/images.jpg"),
+    image: require(".ice-truck-mobile/assets/images.jpg"),
   },
   {
     key: "s2",
     title: "Pickup & Drop-off Service",
-    image: require("./assets/images.jpg"),
+    image: require(".ice-truck-mobile/assets/images.jpg"),
   },
   {
     key: "s3",
     title: "Choose Your Trailer Type",
-    image: require("./assets/images.jpg"),
+    image: require(".ice-truck-mobile/assets/images.jpg"),
   },
 ];
 
@@ -67,7 +67,7 @@ export default function Onboarding() {
           <View style={styles.slide}>
             <View style={styles.illusWrap}>
               <Image
-                source={require("./assets/images.jpg")}
+                source={require(".ice-truck-mobile/assets/images.jpg")}
                 style={{ width: 240, height: 160 }}
               />
             </View>
