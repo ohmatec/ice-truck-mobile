@@ -1,34 +1,16 @@
+// app/_layout.tsx
 import React from "react";
-import { View, ActivityIndicator } from "react-native";
 import { Stack, Redirect, usePathname } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const KEY = "seenOnboarding";
+// ✅ ค่าระดับโมดูล: ใช้กัน redirect ซ้ำใน session เดียว
+let didRedirectOnce = false;
 
 export default function RootLayout() {
   const pathname = usePathname();
-  const [ready, setReady] = React.useState(false);
-  const [seen, setSeen] = React.useState<boolean | null>(null);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        setSeen((await AsyncStorage.getItem(KEY)) === "1");
-      } finally {
-        setReady(true);
-      }
-    })();
-  }, []);
-
-  if (!ready || seen === null) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "white" }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (!seen && pathname !== "/onboarding") {
+  // ✅ พาไป onboarding แค่ "ครั้งแรก" ตอนเปิดแอป และเฉพาะเมื่อเริ่มที่ "/"
+  if (!didRedirectOnce && pathname === "/") {
+    didRedirectOnce = true;           // ทำครั้งเดียวต่อ session
     return <Redirect href="/onboarding" />;
   }
 

@@ -1,81 +1,101 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-/** -------- Mock service ในไฟล์เดียว -------- */
-type Truck = { id: string; name: string; temp: number; updatedAt: string };
+const BLUE = "#58B0FF";
+const TXT = "#0D1B2A";
+const MUTED = "#7C8AA0";
+const CARD = "#FFFFFF";
+const BORDER = "#E6ECF3";
 
-function delay(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-async function fetchTruckDetail(id: string): Promise<Truck> {
-  await delay(400);
-  return { id, name: `Truck ${id.slice(-1)}`, temp: -18.0, updatedAt: new Date().toISOString() };
-}
-/** ------------------------------------------ */
-
-export default function DetailScreen() {
+export default function DetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
 
-  const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "error"; message: string }
-    | { status: "success"; data: Truck }
-  >({ status: "loading" });
-
-  useEffect(() => {
-    if (!id) {
-      setState({ status: "error", message: "Missing id" });
-      return;
-    }
-    (async () => {
-      try {
-        const d = await fetchTruckDetail(String(id));
-        setState({ status: "success", data: d });
-      } catch (e: any) {
-        setState({ status: "error", message: e?.message ?? "UNKNOWN" });
-      }
-    })();
-  }, [id]);
-
   return (
-    <View style={S.screen}>
-      {/* Header ง่าย ๆ */}
-      <View style={{ marginBottom: 16, flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={S.title}>Detail</Text>
-        <Pressable onPress={() => router.back()} style={S.btn}>
-          <Text style={S.btnText}>Back</Text>
-        </Pressable>
+    <SafeAreaView style={{ flex: 1, backgroundColor: BLUE }}>
+      <StatusBar style="light" backgroundColor={BLUE} />
+      <View style={{ flex: 1, backgroundColor: "#F6F8FB" }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+            <Pressable onPress={() => router.back()} style={{ padding: 6, marginRight: 8 }}>
+              <Ionicons name="arrow-back" size={22} color={TXT} />
+            </Pressable>
+            <Text style={{ color: TXT, fontSize: 18, fontWeight: "700" }}>Tracking Detail</Text>
+          </View>
+
+          {/* Shipping/Event tag */}
+          <View style={{ backgroundColor: BLUE, borderRadius: 12, padding: 12, alignSelf: "flex-start" }}>
+            <Text style={{ color: "#fff", fontWeight: "700" }}>Event ID</Text>
+            <Text style={{ color: "#EAF5FF" }}>{id ?? "-"}</Text>
+          </View>
+
+          {/* Summary */}
+          <View style={[styles.card, { marginTop: 12 }]}>
+            <Text style={styles.title}>Summary</Text>
+            <View style={{ marginTop: 8, gap: 6 }}>
+              <Row label="Current Status" value="In transit" />
+              <Row label="Last Update" value={new Date().toLocaleString()} />
+              <Row label="Location" value="DKI Jakarta, Indonesia" />
+            </View>
+          </View>
+
+          {/* Timeline */}
+          <Text style={[styles.title, { marginTop: 18 }]}>Timeline</Text>
+          <View style={{ marginTop: 8, gap: 14 }}>
+            {[
+              { t: "Order Received", l: "Warehouse, Jakarta", d: "Package received by carrier." },
+              { t: "Departure", l: "Tanjung Priok, Indonesia", d: "Departed origin facility." },
+              { t: "In Transit", l: "Bekasi, Indonesia", d: "Moving to destination city." },
+            ].map((it, idx) => (
+              <View key={idx} style={styles.historyRow}>
+                <View style={styles.timelineCol}>
+                  <View style={[styles.bullet, idx === 0 && { backgroundColor: BLUE }]}>
+                    <MaterialCommunityIcons name="truck" size={14} color="#fff" />
+                  </View>
+                  <View style={styles.timeline} />
+                </View>
+                <View style={styles.historyCard}>
+                  <Text style={styles.historyTitle}>{it.t}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
+                    <Ionicons name="location" size={16} color={BLUE} />
+                    <Text style={[styles.location, { marginLeft: 6 }]}>{it.l}</Text>
+                  </View>
+                  <Text style={styles.desc}>{it.d}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
+    </SafeAreaView>
+  );
+}
 
-      {state.status === "loading" && <Text style={S.muted}>Loading...</Text>}
-      {state.status === "error" && <Text style={{ color: "#FF5A7A" }}>Error: {state.message}</Text>}
-
-      {state.status === "success" && (
-        <View style={{ gap: 10 }}>
-          <Text style={S.line}>ID: {state.data.id}</Text>
-          <Text style={S.line}>Name: {state.data.name}</Text>
-          <Text style={S.line}>Temp: {state.data.temp} °C</Text>
-          <Text style={S.muted}>Updated: {new Date(state.data.updatedAt).toLocaleString()}</Text>
-        </View>
-      )}
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+      <Text style={{ color: MUTED }}>{label}</Text>
+      <Text style={{ color: TXT, fontWeight: "700" }}>{value}</Text>
     </View>
   );
 }
 
-const S = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#0B0F14", paddingHorizontal: 16, paddingTop: 18 },
-  title: { fontSize: 20, fontWeight: "700", color: "#E6F2FF" },
-  muted: { color: "#98A6B3" },
-  line: { color: "#E6F2FF", fontSize: 16, fontWeight: "600" },
-  btn: {
-    backgroundColor: "#4FB2FF",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-  },
-  btnText: { color: "#0B0F14", fontWeight: "700" },
+const styles = StyleSheet.create({
+  card: { backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 12 },
+  title: { color: TXT, fontSize: 16, fontWeight: "700" },
+
+  historyRow: { flexDirection: "row", gap: 10 },
+  timelineCol: { alignItems: "center" },
+  bullet: { width: 22, height: 22, borderRadius: 22, backgroundColor: "#9DB4C7", alignItems: "center", justifyContent: "center" },
+  timeline: { width: 2, flex: 1, backgroundColor: BORDER, marginTop: 6, marginBottom: 6 },
+
+  historyCard: { flex: 1, backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 12 },
+  historyTitle: { color: TXT, fontWeight: "700" },
+  location: { color: TXT, fontWeight: "700" },
+  desc: { color: MUTED, marginTop: 6 },
 });

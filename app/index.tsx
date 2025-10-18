@@ -1,182 +1,56 @@
 // app/index.tsx
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, RefreshControl, Pressable, StyleSheet, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import TruckFromSvg from "../components/TruckSVG";
 
-/** ---------- Entry: เช็ค onboarding แล้วค่อยเรนเดอร์ Home ---------- */
-export default function Entry() {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
+const MAX_KG = 12000;
+const STEP = 100;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const seen = (await AsyncStorage.getItem("seenOnboarding")) === "1";
-        if (!seen) {
-          router.replace("/onboarding"); // 👉 ไปหน้า onboarding ครั้งแรก
-          return;
-        }
-      } finally {
-        setReady(true); // พร้อมเรนเดอร์ Home
-      }
-    })();
-  }, [router]);
-
-  if (!ready) {
-    // 👉 แสดง Loader ป้องกันจอขาว (อย่า return null)
-    return (
-      <View style={S.center}>
-        <ActivityIndicator />
-        <Text style={{ color: "#666", marginTop: 8 }}>Loading…</Text>
-      </View>
-    );
-  }
-
-  return <HomeScreen />; // ✅ เคยเห็นแล้ว → เข้าบ้านได้
-}
-/** ------------------------------------------------------------------- */
-
-
-/** -------- Mock service แบบเบา ๆ ในไฟล์เดียว (คงตามที่คุณให้มา) -------- */
-type Truck = { id: string; name: string; temp: number; updatedAt: string };
-
-function delay(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-async function fetchTrucks(): Promise<Truck[]> {
-  await delay(500);
-  // สุ่ม error เล็กน้อยเพื่อเทส UI
-  if (Math.random() < 1 / 6) throw new Error("NETWORK_ERROR");
-  // สุ่ม empty นิดหน่อย
-  if (Math.random() < 1 / 12) return [];
-  const now = new Date().toISOString();
-  return [
-    { id: "T-001", name: "Truck A", temp: -18.2, updatedAt: now },
-    { id: "T-002", name: "Truck B", temp: -17.6, updatedAt: now },
-    { id: "T-003", name: "Truck C", temp: -19.1, updatedAt: now },
-  ];
-}
-/** --------------------------------------------------------------------- */
-
-
-/** ----------------------------- HomeScreen ---------------------------- */
-function HomeScreen() {
-  const router = useRouter();
-  const [data, setData] = useState<Truck[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await fetchTrucks();
-      setData(res);
-    } catch (e: any) {
-      setError(e?.message ?? "UNKNOWN");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const res = await fetchTrucks();
-      setData(res);
-      setError(null);
-    } catch (e: any) {
-      setError(e?.message ?? "UNKNOWN");
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+export default function IndexScreen() {
+  const [weightKg, setWeightKg] = useState(7282);
+  const spacePct = Math.floor((weightKg / MAX_KG) * 100);
 
   return (
-    <View style={S.screen}>
-      <Text style={S.title} accessibilityRole="header">
-        Ice Truck
-      </Text>
-      <Text style={S.subtitle}>Realtime (mock)</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F6F8FB" }}>
+      <StatusBar style="dark" />
+      <View style={S.container}>
+        <Text style={S.h1}>Your Truck</Text>
 
-      {error ? (
-        <View style={{ marginTop: 12, marginBottom: 8 }}>
-          <Text style={{ color: "#FF5A7A", marginBottom: 8 }}>Error: {error}</Text>
-          <Pressable onPress={load} style={S.btn}>
-            <Text style={S.btnText}>Try again</Text>
-          </Pressable>
-        </View>
-      ) : null}
+        <TruckFromSvg fillPct={spacePct} height={120} />
 
-      {!loading && data.length === 0 ? (
         <View style={{ marginTop: 16 }}>
-          <Text style={{ color: "#98A6B3", marginBottom: 8 }}>No data available.</Text>
-          <Pressable onPress={load} style={S.btn}>
-            <Text style={S.btnText}>Reload</Text>
+          <Text style={S.label}>Space Capacity</Text>
+          <Text style={S.big}>{spacePct}%</Text>
+        </View>
+
+        <View style={{ marginTop: 12 }}>
+          <Text style={S.label}>Weight (KG)</Text>
+          <Text style={S.big}>{new Intl.NumberFormat().format(weightKg)}</Text>
+        </View>
+
+        <View style={S.row}>
+          <Pressable style={[S.btn, { backgroundColor: "#EDF4FF" }]}
+            onPress={() => setWeightKg(Math.max(0, weightKg - STEP))}>
+            <Text style={[S.btnTxt, { color: "#000000ff" }]}>- {STEP}</Text>
+          </Pressable>
+          <Pressable style={[S.btn, { backgroundColor: "#3BA0FF" }]}
+            onPress={() => setWeightKg(Math.min(MAX_KG, weightKg + STEP))}>
+            <Text style={[S.btnTxt, { color: "#fff" }]}>+ {STEP}</Text>
           </Pressable>
         </View>
-      ) : null}
-
-      <FlatList
-        data={data}
-        keyExtractor={(it) => it.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4FB2FF" />}
-        contentContainerStyle={{ paddingVertical: 16 }}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        renderItem={({ item }) => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${item.name}`}
-            onPress={() => router.push({ pathname: "/details", params: { id: item.id } })}
-            style={({ pressed }) => [S.card, pressed && { opacity: 0.95, transform: [{ scale: 0.997 }] }]}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={S.cardTitle}>
-                {item.name} · {item.temp}°C
-              </Text>
-              <Text style={S.cardSub}>Updated: {new Date(item.updatedAt).toLocaleTimeString()}</Text>
-            </View>
-            <Text style={{ color: "#98A6B3", fontWeight: "600" }}>{item.id}</Text>
-          </Pressable>
-        )}
-      />
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
-/** --------------------------------------------------------------------- */
 
-
-/** -------------------------------- Styles ----------------------------- */
 const S = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#0B0F14", paddingHorizontal: 16, paddingTop: 18 },
-  title: { fontSize: 20, fontWeight: "700", color: "#E6F2FF" },
-  subtitle: { fontSize: 14, color: "#98A6B3", marginTop: 4 },
-  card: {
-    backgroundColor: "#121821",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1E2630",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  cardTitle: { color: "#E6F2FF", fontSize: 16, fontWeight: "700" },
-  cardSub: { color: "#98A6B3", marginTop: 6 },
-  btn: {
-    backgroundColor: "#4FB2FF",
-    alignSelf: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  btnText: { color: "#0B0F14", fontWeight: "700" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "white" },
+  container: { flex: 1, padding: 16, gap: 10 },
+  h1: { fontSize: 20, fontWeight: "700", color: "#0D1B2A", marginBottom: 8 },
+  label: { color: "#7C8AA0" },
+  big: { color: "#0D1B2A", fontSize: 22, fontWeight: "800" },
+  row: { flexDirection: "row", gap: 10, marginTop: 14 },
+  btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  btnTxt: { fontWeight: "700" },
 });
