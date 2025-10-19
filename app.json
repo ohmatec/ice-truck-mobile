@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "plugins": ["expo-router"],
     "splash": {
-      "image": "./assets/images.png",
+      "image": "./assets/images1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
