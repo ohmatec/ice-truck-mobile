@@ -9,7 +9,7 @@ type Props = { fillPct: number; height?: number; };
 const VB_W = 740;  // ดูจาก viewBox="0 0 740 300"
 const VB_H = 199;
 const cargoX = 108;
-const cargoY = 0.5;
+const cargoY = 1;
 const cargoW = 460;
 const cargoH = 120;
 
