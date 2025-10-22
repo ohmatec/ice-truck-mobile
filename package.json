@@ -2,13 +2,16 @@
   "name": "@ice-truck/mobile-app",
   "version": "1.0.0",
   "main": "expo-router/entry",
+  "expo-router": {
+    "appDir": "src/app"
+  },
   "scripts": {
     "build": "echo 'Mobile app build complete'",
     "dev": "expo start --non-interactive",
     "start": "expo start -c",
     "clean": "rm -rf .expo dist",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "build:android": "eas build --platform android",
     "build:ios": "eas build --platform ios",
@@ -27,12 +30,14 @@
     "deploy:production": "node scripts/deploy-mobile.js production",
     "deploy:staging:submit": "node scripts/deploy-mobile.js staging both --submit",
     "deploy:production:submit": "node scripts/deploy-mobile.js production both --submit",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "detox:build:ios": "detox build --configuration ios.sim.debug",
     "detox:build:android": "detox build --configuration android.emu.debug",
-    "detox:clean": "detox clean-framework-cache && detox clean-project-cache"
+    "detox:clean": "detox clean-framework-cache && detox clean-project-cache",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -48,6 +53,7 @@
     "expo-location": "~19.0.7",
     "expo-notifications": "~0.32.12",
     "expo-secure-store": "~15.0.7",
+    "expo-splash-screen": "~31.0.10",
     "expo-sqlite": "~16.0.8",
     "expo-status-bar": "~3.0.8",
     "expo-updates": "~29.0.12",

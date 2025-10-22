@@ -1,7 +1,7 @@
 // components/TruckFromSvg.tsx
 import React, { useCallback, useState } from "react";
 import { View, LayoutChangeEvent } from "react-native";
-import TruckAsset from "../assets/truck.svg"; // << ไฟล์ SVG จาก Figma
+import TruckAsset from "../../assets/truck.svg"; // << ไฟล์ SVG จาก Figma
 
 type Props = { fillPct: number; height?: number; };
 

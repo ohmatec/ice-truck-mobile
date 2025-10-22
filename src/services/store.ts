@@ -136,14 +136,16 @@ export function addHistory(
 ) {
   const list = historyByTruck[truckId] ?? (historyByTruck[truckId] = []);
   const newItem: HistoryItem = {
-    id: genHistId(),
-    truckId,
-    timeISO: item.timeISO ?? new Date().toISOString(),
-    title: item.title,
-    location: item.location,
-    desc: item.desc,
-    highlight: item.highlight,
-  };
+  id: genHistId(),
+  truckId,
+  timeISO: item.timeISO ?? new Date().toISOString(),
+  title: item.title,
+  location: item.location,
+  desc: item.desc,
+  highlight: item.highlight ?? false,   // ✅ บังคับเป็น boolean
+  // หรือ: highlight: !!item.highlight
+};
+
   // ถ้าเป็น live ให้ upsert (เก็บรายการ live ล่าสุด 1 รายการ)
   if (newItem.title.toLowerCase().includes("live position")) {
     const idx = list.findIndex(
