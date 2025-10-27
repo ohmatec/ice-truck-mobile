@@ -1,6 +1,6 @@
 import { Pressable, PressableProps, View, ActivityIndicator } from 'react-native';
 import Text from './Text';
-import { colors, spacing, radius } from '@app/theme/tokens';
+import { colors, spacing, radius } from '@src/theme/tokens';
 
 type Props = PressableProps & { title: string; loading?: boolean; tone?: 'primary' | 'danger' };
 

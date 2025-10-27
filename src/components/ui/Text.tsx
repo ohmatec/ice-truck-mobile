@@ -1,5 +1,5 @@
 import { Text as RNText, TextProps } from 'react-native';
-import { common } from '@app/theme/styles';
+import { common } from '@src/theme/styles';
 
 type Variant = 'h1' | 'h2' | 'body' | 'caption';
 

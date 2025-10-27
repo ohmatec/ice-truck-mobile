@@ -3,6 +3,18 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ["babel-preset-expo"],
-    plugins: [],
+    plugins: [
+      [
+        "module-resolver",
+        {
+          root: ["./"],
+          alias: {
+            "@app": "./src",
+          },
+          extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+        },
+      ],
+      "react-native-reanimated/plugin", // ถ้าใช้ Reanimated
+    ],
   };
 };

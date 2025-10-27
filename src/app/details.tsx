@@ -1,12 +1,12 @@
 // app/details.tsx
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
-import TruckFromSvg from '../components/TruckSVG';
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
+import TruckFromSvg from "../components/TruckSVG";
 import {
   getTrucks,
   subscribe,
@@ -14,9 +14,9 @@ import {
   addHistory,
   getHistory,
   subscribeHistory,
-  Truck,
-  HistoryItem as HItem,
-} from '../services/store';
+  type Truck,
+} from "../services/store";
+import * as api from "../services/api";
 
 const STEP = 500;
 
@@ -24,35 +24,35 @@ export default function DetailsScreen() {
   const { tid } = useLocalSearchParams<{ tid?: string }>();
   const router = useRouter();
 
-  // trucks state
   const [trucks, setTrucks] = useState<Truck[]>(getTrucks());
   useEffect(() => {
-    const unsubscribe = subscribe(setTrucks);
-    return typeof unsubscribe === 'function' ? unsubscribe : undefined;
+    const unsub = subscribe(setTrucks);
+    return typeof unsub === "function" ? unsub : undefined;
   }, []);
 
-  const truck = useMemo(() => trucks.find((t) => t.id === tid), [trucks, tid]);
+  const truck = useMemo(
+    () => (tid ? trucks.find((t) => t.id === tid) : undefined),
+    [trucks, tid]
+  );
 
-  // per-truck history
-  const [history, setHistory] = useState<HItem[]>(getHistory(tid ?? ''));
+  const [history, setHistory] = useState(() => (tid ? getHistory(tid) : []));
   useEffect(() => {
     if (!tid) return;
-    const unsubscribe = subscribeHistory(tid, setHistory);
-    return typeof unsubscribe === 'function' ? unsubscribe : undefined;
+    const unsub = subscribeHistory(tid, setHistory);
+    return typeof unsub === "function" ? unsub : undefined;
   }, [tid]);
 
-  // live location subscription
   useEffect(() => {
+    if (!tid) return;
     let sub: Location.LocationSubscription | null = null;
 
     (async () => {
-      if (!tid) return;
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         addHistory(tid, {
-          title: 'Live position',
-          location: 'Permission denied',
-          desc: 'Location permission was not granted.',
+          title: "Live position",
+          location: "Permission denied",
+          desc: "Location permission was not granted.",
           highlight: false,
           timeISO: new Date().toISOString(),
         });
@@ -71,10 +71,10 @@ export default function DetailsScreen() {
               longitude: pos.coords.longitude,
             });
             const first = rev[0];
-            const city = first?.city || first?.subregion || 'Unknown City';
-            const country = first?.country || '';
+            const city = first?.city || first?.subregion || "Unknown City";
+            const country = first?.country || "";
             addHistory(tid, {
-              title: 'Live position',
+              title: "Live position",
               location: `${city}, ${country}`,
               desc: `Lat ${pos.coords.latitude.toFixed(5)}, Lng ${pos.coords.longitude.toFixed(5)}`,
               highlight: true,
@@ -82,47 +82,51 @@ export default function DetailsScreen() {
             });
           } catch {
             addHistory(tid, {
-              title: 'Live position',
-              location: '—',
-              desc: 'Updating…',
+              title: "Live position",
+              location: "—",
+              desc: "Updating…",
               highlight: true,
               timeISO: new Date().toISOString(),
             });
           }
-        },
+        }
       );
     })();
 
-    return () => {
-      sub?.remove();
-    };
+    return () => sub?.remove();
   }, [tid]);
 
-  if (!truck) {
+  // sync น้ำหนักขึ้น API ทุกครั้งที่เปลี่ยน
+  useEffect(() => {
+    if (!truck) return;
+    api.updateTruckLoad(truck.id, truck.weightKg).catch(() => {});
+  }, [truck?.id, truck?.weightKg]);
+
+  if (!tid || !truck) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView style={F.center}>
         <StatusBar style="dark" />
-        <Text>Truck not found.</Text>
-        <Pressable onPress={() => router.replace('/')} accessibilityRole="button">
-          <Text style={{ color: '#3BA0FF', marginTop: 8 }}>Back</Text>
+        <Text style={F.title}>Truck not found</Text>
+        <Pressable style={F.backBtn} onPress={() => router.replace("/")}>
+          <Text style={{ color: "#fff", fontWeight: "800" }}>Back to Home</Text>
         </Pressable>
       </SafeAreaView>
     );
   }
 
   const safeMaxKg = truck.maxKg > 0 ? truck.maxKg : 1;
-  const spacePct = Math.max(0, Math.min(100, Math.floor((truck.weightKg / safeMaxKg) * 100)));
+  const spacePct = Math.max(
+    0,
+    Math.min(100, Math.floor((truck.weightKg / safeMaxKg) * 100))
+  );
 
-  function adjust(delta: number) {
-  if (!truck) return; // กัน null/undefined ทุกครั้งที่กดปุ่ม
-
-  const next = Math.max(0, Math.min(truck.maxKg, truck.weightKg + delta));
-  updateTruck(truck.id, { weightKg: next });
-}
-
+  const adjust = (delta: number) => {
+    const next = Math.max(0, Math.min(truck.maxKg, truck.weightKg + delta));
+    updateTruck(truck.id, { weightKg: next });
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F8FB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F6F8FB" }}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <Text style={D.h1}>{truck.name}</Text>
@@ -132,33 +136,30 @@ export default function DetailsScreen() {
         {/* Truck Info */}
         <View style={D.infoHead}>
           <Text style={D.title}>Truck Information</Text>
-          <Pressable
-            onPress={() => updateTruck(truck.id, { weightKg: 0 })}
-            accessibilityRole="button"
-          >
+          <Pressable onPress={() => updateTruck(truck.id, { weightKg: 0 })}>
             <Text style={D.reset}>Reset Load</Text>
           </Pressable>
         </View>
 
+        {/* +/- */}
         <View style={D.row}>
           <Pressable
-            style={[D.btn, { backgroundColor: '#EDF4FF' }]}
+            style={[D.btn, { backgroundColor: "#EDF4FF" }]}
             onPress={() => adjust(-STEP)}
-            accessibilityRole="button"
             accessibilityLabel="Decrease load"
           >
-            <Text style={[D.btnTxt, { color: '#000' }]}>- {STEP}</Text>
+            <Text style={[D.btnTxt, { color: "#000" }]}>- {STEP}</Text>
           </Pressable>
           <Pressable
-            style={[D.btn, { backgroundColor: '#3BA0FF' }]}
+            style={[D.btn, { backgroundColor: "#3BA0FF" }]}
             onPress={() => adjust(+STEP)}
-            accessibilityRole="button"
             accessibilityLabel="Increase load"
           >
-            <Text style={[D.btnTxt, { color: '#fff' }]}>+ {STEP}</Text>
+            <Text style={[D.btnTxt, { color: "#fff" }]}>+ {STEP}</Text>
           </Pressable>
         </View>
 
+        {/* Progress */}
         <View style={{ marginTop: 6 }}>
           <View style={D.metaRow}>
             <Text style={D.metaLeft}>Space Capacity (%)</Text>
@@ -170,7 +171,7 @@ export default function DetailsScreen() {
           <Text style={D.pct}>{spacePct}%</Text>
         </View>
 
-        {/* Specs (ตัวอย่างข้อมูล) */}
+        {/* Specs (ตัวอย่าง) */}
         <View style={D.grid}>
           <SpecRow
             leftLabel="Type"
@@ -192,7 +193,7 @@ export default function DetailsScreen() {
           />
         </View>
 
-        {/* Tracking per truck */}
+        {/* Per-truck history */}
         <Text style={[D.title, { marginTop: 16 }]}>Tracking History</Text>
         {history.map((h) => (
           <HistoryCard key={h.id} item={h} />
@@ -222,11 +223,20 @@ function SpecRow(p: {
   );
 }
 
-function HistoryCard({ item }: { item: HItem }) {
+function HistoryCard({ item }: { item: any }) {
+  const time =
+    item?.time instanceof Date
+      ? item.time
+      : item?.timeISO
+        ? new Date(item.timeISO)
+        : null;
+
   return (
-    <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-      <View style={{ alignItems: 'center' }}>
-        <View style={[HI.bullet, item.highlight && { backgroundColor: '#3BA0FF' }]}>
+    <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+      <View style={{ alignItems: "center" }}>
+        <View
+          style={[HI.bullet, item?.highlight && { backgroundColor: "#3BA0FF" }]}
+        >
           <MaterialCommunityIcons name="truck" size={14} color="#fff" />
         </View>
         <View style={HI.dash} />
@@ -234,60 +244,77 @@ function HistoryCard({ item }: { item: HItem }) {
 
       <View style={HI.card}>
         <View style={HI.rowHead}>
-          <Text style={HI.title}>{item.title}</Text>
+          <Text style={HI.title}>{item?.title ?? "-"}</Text>
           <View style={HI.iconRow}>
             <Ionicons name="call-outline" size={18} color="#8A97A8" />
-            <Ionicons name="chatbubble-ellipses-outline" size={18} color="#8A97A8" />
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={18}
+              color="#8A97A8"
+            />
           </View>
         </View>
-        <Text style={HI.time}>{new Date(item.timeISO).toLocaleString()}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+        <Text style={HI.time}>{time ? time.toLocaleString() : "-"}</Text>
+
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}
+        >
           <Ionicons name="location" size={16} color="#3BA0FF" />
-          <Text style={[HI.loc, { marginLeft: 6 }]}>{item.location}</Text>
+          <Text style={[HI.loc, { marginLeft: 6 }]}>
+            {item?.location ?? "-"}
+          </Text>
         </View>
-        <Text style={HI.desc}>{item.desc}</Text>
+        <Text style={HI.desc}>{item?.desc ?? "-"}</Text>
       </View>
     </View>
   );
 }
 
 const D = StyleSheet.create({
-  h1: { fontSize: 20, fontWeight: '800', color: '#1F2A37' },
-  title: { fontSize: 16, fontWeight: '800', color: '#1F2A37' },
-  reset: { color: '#FF6E7A', fontWeight: '700' },
+  h1: { fontSize: 20, fontWeight: "800", color: "#1F2A37" },
+  title: { fontSize: 16, fontWeight: "800", color: "#1F2A37" },
+  reset: { color: "#FF6E7A", fontWeight: "700" },
   infoHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 10,
   },
-  row: { flexDirection: 'row', gap: 10, marginTop: 16, marginBottom: 12 },
+  row: { flexDirection: "row", gap: 10, marginTop: 16, marginBottom: 12 },
   btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  btnTxt: { fontWeight: '700' },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  metaLeft: { color: '#8A97A8', fontSize: 12 },
-  metaRight: { color: '#C0C7D3', fontSize: 12 },
+  btnTxt: { fontWeight: "700" },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  metaLeft: { color: "#8A97A8", fontSize: 12 },
+  metaRight: { color: "#C0C7D3", fontSize: 12 },
   track: {
     height: 4,
-    backgroundColor: '#E8EEF5',
+    backgroundColor: "#E8EEF5",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 4,
   },
-  fill: { height: '100%', backgroundColor: '#3BA0FF' },
-  pct: { marginTop: 6, color: '#3BA0FF', fontWeight: '800', fontSize: 18 },
+  fill: { height: "100%", backgroundColor: "#3BA0FF" },
+  pct: { marginTop: 6, color: "#3BA0FF", fontWeight: "800", fontSize: 18 },
   grid: {
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#E8EEF5',
+    borderTopColor: "#E8EEF5",
     borderBottomWidth: 1,
-    borderBottomColor: '#E8EEF5',
+    borderBottomColor: "#E8EEF5",
   },
-  rowSpec: { flexDirection: 'row', paddingVertical: 10 },
+  rowSpec: { flexDirection: "row", paddingVertical: 10 },
   cell: { flex: 1, paddingRight: 12 },
-  cellDivider: { borderLeftWidth: 1, borderLeftColor: '#E8EEF5', paddingLeft: 12 },
-  kLabel: { color: '#8A97A8', fontSize: 12, marginBottom: 4 },
-  kValue: { color: '#1F2A37', fontWeight: '700' },
+  cellDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: "#E8EEF5",
+    paddingLeft: 12,
+  },
+  kLabel: { color: "#8A97A8", fontSize: 12, marginBottom: 4 },
+  kValue: { color: "#1F2A37", fontWeight: "700" },
 });
 
 const HI = StyleSheet.create({
@@ -295,34 +322,55 @@ const HI = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 22,
-    backgroundColor: '#9DB4C7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#9DB4C7",
+    alignItems: "center",
+    justifyContent: "center",
   },
   dash: {
     width: 2,
     flex: 1,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderLeftWidth: 2,
-    borderColor: '#E8EEF5',
+    borderColor: "#E8EEF5",
     marginTop: 4,
   },
   card: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E8EEF5',
+    borderColor: "#E8EEF5",
     padding: 12,
   },
-  rowHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: '#1F2A37', fontWeight: '800' },
-  iconRow: { flexDirection: 'row', gap: 10 },
-  time: { color: '#8A97A8', marginTop: 2, fontSize: 12 },
-  loc: { color: '#1F2A37', fontWeight: '800' },
-  desc: { color: '#8A97A8', marginTop: 6, fontSize: 12 },
+  rowHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  title: { color: "#1F2A37", fontWeight: "800" },
+  iconRow: { flexDirection: "row", gap: 10 },
+  time: { color: "#8A97A8", marginTop: 2, fontSize: 12 },
+  loc: { color: "#1F2A37", fontWeight: "800" },
+  desc: { color: "#8A97A8", marginTop: 6, fontSize: 12 },
 });
 
 function fmt(n: number) {
   return new Intl.NumberFormat().format(n);
 }
+
+const F = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F6F8FB",
+  },
+  title: { fontSize: 16, fontWeight: "800", color: "#1F2A37" },
+  backBtn: {
+    marginTop: 12,
+    backgroundColor: "#3BA0FF",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+});

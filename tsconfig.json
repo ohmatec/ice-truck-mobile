@@ -5,13 +5,11 @@
     "module": "esnext",
     "jsx": "react-jsx",
     "strict": true,
-
     "moduleResolution": "bundler",
     "customConditions": ["react-native"],
-
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["src/*"]
+      "@src/*": ["src/*"]
     },
 
     "types": ["jest", "react", "react-native"],
@@ -19,6 +17,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src", "src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src", "src/**/*.ts", "src/**/*.tsx", "svg.d.ts"],
   "exclude": ["node_modules", "dist", "build"]
 }

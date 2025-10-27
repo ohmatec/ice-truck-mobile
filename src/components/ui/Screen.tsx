@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { common } from '@app/theme/styles';
+import { common } from '@src/theme/styles';
 
 type Props = { children: ReactNode; padded?: boolean };
 export default function Screen({ children, padded = true }: Props) {
